@@ -1,0 +1,40 @@
+---
+- name: Validate Palo Alto upgrade configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - "../group_vars/palo_alto_firewalls.yml"
+    - "../vars/upgrade_config.yml"
+
+  tasks:
+    - name: Validate target firmware version format
+      ansible.builtin.assert:
+        that:
+          - target_firmware_version is match('^[0-9]+\\.[0-9]+\\.[0-9]+$')
+        fail_msg: "target_firmware_version must be in x.y.z format."
+
+    - name: Validate upgrade strategy
+      ansible.builtin.assert:
+        that:
+          - upgrade_strategy in ['rolling', 'immediate']
+        fail_msg: "upgrade_strategy must be rolling or immediate."
+
+    - name: Validate execution mode
+      ansible.builtin.assert:
+        that:
+          - execution_mode in ['sequential', 'parallel']
+        fail_msg: "execution_mode must be sequential or parallel."
+
+    - name: Validate HA failover strategy
+      ansible.builtin.assert:
+        that:
+          - ha_failover_strategy in ['graceful', 'immediate']
+        fail_msg: "ha_failover_strategy must be graceful or immediate."
+
+    - name: Validate backup and log directories are configured
+      ansible.builtin.assert:
+        that:
+          - backup_dir | length > 0
+          - log_dir | length > 0
+        fail_msg: "backup_dir and log_dir must be non-empty."

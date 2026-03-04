@@ -130,6 +130,23 @@ ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml -l fw
 ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml -vv
 ```
 
+## Testing
+
+Run automated checks:
+
+```bash
+./tests/run_tests.sh
+```
+
+Run live PAN firewall API smoke test (optional):
+
+```bash
+export PAN_TEST_HOST=10.0.1.10
+export PAN_TEST_USERNAME=admin
+export PAN_TEST_PASSWORD='your_password'
+./tests/run_tests.sh
+```
+
 ## Playbook Phases
 
 ### Phase 1: Pre-Upgrade Validation

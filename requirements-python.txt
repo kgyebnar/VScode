@@ -19,6 +19,7 @@ paramiko>=2.7.0
 cryptography>=3.4.0
 
 # Testing and development
+ansible-core>=2.14.0
 pytest>=6.0.0
 pytest-ansible>=0.3.0
 

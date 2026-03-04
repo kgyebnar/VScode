@@ -1,0 +1,34 @@
+---
+- name: PAN firewall API smoke test
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    pan_test_host: "{{ lookup('env', 'PAN_TEST_HOST') }}"
+    pan_test_username: "{{ lookup('env', 'PAN_TEST_USERNAME') }}"
+    pan_test_password: "{{ lookup('env', 'PAN_TEST_PASSWORD') }}"
+
+  tasks:
+    - name: Ensure PAN smoke-test variables are set
+      ansible.builtin.assert:
+        that:
+          - pan_test_host | length > 0
+          - pan_test_username | length > 0
+          - pan_test_password | length > 0
+        fail_msg: "Set PAN_TEST_HOST, PAN_TEST_USERNAME and PAN_TEST_PASSWORD environment variables."
+
+    - name: Request API key from PAN firewall
+      ansible.builtin.uri:
+        url: "https://{{ pan_test_host }}/api/?type=keygen&user={{ pan_test_username | urlencode }}&password={{ pan_test_password | urlencode }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+        status_code: 200
+      register: pan_keygen_result
+
+    - name: Validate API keygen response
+      ansible.builtin.assert:
+        that:
+          - "'status=\"success\"' in pan_keygen_result.content"
+          - "'<key>' in pan_keygen_result.content"
+        fail_msg: "PAN API key generation failed. Check API access and credentials."
