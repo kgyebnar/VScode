@@ -351,6 +351,12 @@ ansible-playbook palo_alto_firewall_upgrade.yml \
   -e backup_dir=/backups/palo_alto/2026-03-04
 ```
 
+### Fixed Version Transition (10.2.4 -> 11.0.2)
+```bash
+ansible-playbook palo_alto_firewall_rollback.yml \
+  -i inventory/palo_alto.yml
+```
+
 ### Dry-run with Detailed Output
 ```bash
 ansible-playbook palo_alto_firewall_upgrade.yml \

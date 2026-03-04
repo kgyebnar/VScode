@@ -61,6 +61,12 @@ ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml --che
 ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml
 ```
 
+Rollback to a version that is already on the firewall:
+
+```bash
+ansible-playbook palo_alto_firewall_rollback.yml -i inventory/palo_alto.yml
+```
+
 ## Step 6: Run on Opengear OM2248 (Container)
 
 Build and test inside Docker (works without Docker Compose):

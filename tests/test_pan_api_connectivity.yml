@@ -29,6 +29,6 @@
     - name: Validate API keygen response
       ansible.builtin.assert:
         that:
-          - "'status=\"success\"' in pan_keygen_result.content"
+          - pan_keygen_result.content is regex("status\\s*=\\s*['\\\"]success['\\\"]")
           - "'<key>' in pan_keygen_result.content"
         fail_msg: "PAN API key generation failed. Check API access and credentials."

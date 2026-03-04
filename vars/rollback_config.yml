@@ -1,0 +1,11 @@
+---
+# Rollback-specific configuration
+
+# Fixed version pair
+# Only this transition is allowed:
+# current_version -> target_version
+current_version: "10.2.4"
+target_version: "11.0.2"
+
+# Rollback wait timeout in seconds
+rollback_reboot_timeout: 900

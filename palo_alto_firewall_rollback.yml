@@ -1,0 +1,181 @@
+---
+- name: Palo Alto Networks Firewall Rollback Playbook
+  hosts: palo_alto_firewalls
+  connection: local
+  gather_facts: no
+  vars_files:
+    - "group_vars/palo_alto_firewalls.yml"
+    - "vars/rollback_config.yml"
+
+  pre_tasks:
+    - name: Generate run timestamp
+      set_fact:
+        run_timestamp: "{{ lookup('pipe', 'date +%Y%m%dT%H%M%S') }}"
+      run_once: yes
+      delegate_to: localhost
+
+    - name: Create backup and log directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ backup_dir }}"
+        - "{{ log_dir }}"
+      run_once: yes
+      delegate_to: localhost
+
+    - name: Validate fixed version pair
+      ansible.builtin.assert:
+        that:
+          - current_version == "10.2.4"
+          - target_version == "11.0.2"
+        fail_msg: "Only fixed version pair is supported: current=10.2.4, target=11.0.2."
+      run_once: yes
+
+  tasks:
+    - name: Check mode notice
+      debug:
+        msg: "Check mode detected for {{ inventory_hostname }}. Live rollback operations are skipped."
+      when: ansible_check_mode
+
+    - name: End host execution in check mode
+      meta: end_host
+      when: ansible_check_mode
+
+    - name: Show rollback target
+      debug:
+        msg: "Version transition for {{ inventory_hostname }} is {{ current_version }} -> {{ target_version }}"
+
+    - name: Test firewall API connectivity
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system info"
+      register: firewall_info
+      retries: 3
+      delay: 5
+      until: firewall_info is succeeded
+
+    - name: Extract current firmware version
+      xml:
+        xmlstring: "{{ firewall_info.stdout_xml }}"
+        xpath: /response/result/system/app-version
+        content: text
+      register: current_fw_version
+
+    - name: Set current firmware fact
+      set_fact:
+        detected_current_version: "{{ current_fw_version.matches[0].values()[0] | default('unknown') }}"
+
+    - name: Log current firmware
+      debug:
+        msg: "{{ inventory_hostname }} current firmware: {{ detected_current_version }}"
+
+    - name: Ensure current firmware is one of fixed pair versions
+      ansible.builtin.assert:
+        that:
+          - detected_current_version in [current_version, target_version]
+        fail_msg: >-
+          Current firmware must be {{ current_version }} or {{ target_version }}.
+          Detected: {{ detected_current_version }}.
+
+    - name: Skip rollback if already at target
+      set_fact:
+        skip_rollback: "{{ detected_current_version == target_version }}"
+
+    - name: Rollback skip message
+      debug:
+        msg: "{{ inventory_hostname }} already at {{ target_version }}, rollback skipped."
+      when: skip_rollback | default(false)
+
+    - name: Check available software versions
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system software info"
+      register: available_sw
+      when: not skip_rollback | default(false)
+
+    - name: Ensure rollback target exists on firewall
+      ansible.builtin.assert:
+        that:
+          - target_version in (available_sw.stdout_xml | default(''))
+        fail_msg: "Target version {{ target_version }} not found on firewall software list."
+      when: not skip_rollback | default(false)
+
+    - name: Create pre-rollback configuration backup
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request export configuration to file"
+      register: backup_result
+      when: not skip_rollback | default(false)
+
+    - name: Record backup file path
+      set_fact:
+        rollback_backup_file: "{{ backup_dir }}/{{ inventory_hostname }}-pre-rollback-{{ run_timestamp }}.xml"
+      when: not skip_rollback | default(false)
+
+    - name: Execute firmware rollback
+      paloaltonetworks.panos.panos_software:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        version: "{{ target_version }}"
+        download: no
+        install: yes
+        restart: yes
+      register: rollback_result
+      when: not skip_rollback | default(false)
+
+    - name: Wait for firewall recovery after rollback reboot
+      wait_for:
+        host: "{{ panos_ip | default(inventory_hostname) }}"
+        port: 443
+        delay: 30
+        timeout: "{{ rollback_reboot_timeout }}"
+        state: started
+      delegate_to: localhost
+      when: not skip_rollback | default(false)
+
+    - name: Verify firmware version after rollback
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system info"
+      register: post_rollback_info
+      retries: 10
+      delay: 30
+      until: post_rollback_info is succeeded
+      when: not skip_rollback | default(false)
+
+    - name: Extract post-rollback firmware version
+      xml:
+        xmlstring: "{{ post_rollback_info.stdout_xml }}"
+        xpath: /response/result/system/app-version
+        content: text
+      register: post_rollback_version
+      when: not skip_rollback | default(false)
+
+    - name: Validate rollback result
+      ansible.builtin.assert:
+        that:
+          - post_rollback_version.matches[0].values()[0] | default('unknown') == target_version
+        fail_msg: >-
+          Rollback failed. Expected {{ target_version }}, got
+          {{ post_rollback_version.matches[0].values()[0] | default('unknown') }}.
+      when: not skip_rollback | default(false)
+
+    - name: Rollback success message
+      debug:
+        msg: >-
+          ROLLBACK SUCCESSFUL for {{ inventory_hostname }}.
+          Previous version: {{ detected_current_version }}.
+          New version: {{ target_version }}.
+          Backup file: {{ rollback_backup_file | default('N/A') }}.
+      when: not skip_rollback | default(false)

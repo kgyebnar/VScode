@@ -8,6 +8,12 @@
     - "vars/upgrade_config.yml"
 
   pre_tasks:
+    - name: Generate run timestamp
+      set_fact:
+        run_timestamp: "{{ lookup('pipe', 'date +%Y%m%dT%H%M%S') }}"
+      run_once: yes
+      delegate_to: localhost
+
     - name: Create backup and log directories
       file:
         path: "{{ item }}"
@@ -21,7 +27,7 @@
 
     - name: Set upgrade log file path
       set_fact:
-        upgrade_log_file: "{{ log_dir }}/upgrade_{{ ansible_date_time.iso8601_basic_short }}.log"
+        upgrade_log_file: "{{ log_dir }}/upgrade_{{ run_timestamp }}.log"
       run_once: yes
       delegate_to: localhost
 
@@ -31,6 +37,15 @@
       run_once: yes
 
   tasks:
+    - name: Check mode notice
+      debug:
+        msg: "Check mode detected for {{ inventory_hostname }}. Live firewall operations are skipped."
+      when: ansible_check_mode
+
+    - name: End host execution in check mode
+      meta: end_host
+      when: ansible_check_mode
+
     # ============================================================================
     # PHASE 1: PRE-UPGRADE VALIDATION
     # ============================================================================
@@ -185,14 +200,14 @@
         username: "{{ panos_username }}"
         password: "{{ panos_password }}"
         cmd: >
-          request export configuration to "ftp://{{ inventory_hostname }}-{{ ansible_date_time.iso8601_basic_short }}.xml"
+          request export configuration to "ftp://{{ inventory_hostname }}-{{ run_timestamp }}.xml"
       register: backup_export
       when: not skip_upgrade | default(false)
       ignore_errors: yes
 
     - name: Save backup file path
       set_fact:
-        backup_file: "{{ backup_dir }}/{{ inventory_hostname }}-{{ current_fw_version.matches[0].values()[0] | default('unknown') }}-backup-{{ ansible_date_time.iso8601_basic_short }}.xml"
+        backup_file: "{{ backup_dir }}/{{ inventory_hostname }}-{{ current_fw_version.matches[0].values()[0] | default('unknown') }}-backup-{{ run_timestamp }}.xml"
       when: not skip_upgrade | default(false)
 
     - name: Record backup completion
