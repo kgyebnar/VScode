@@ -138,7 +138,17 @@ Run automated checks:
 ./tests/run_tests.sh
 ```
 
-Run the same tests in a container (Opengear OM2248):
+Run the same tests in a container (Opengear OM2248, Docker-only path):
+
+```bash
+sudo docker build -t palo-alto-upgrade:latest .
+sudo docker run --rm \
+  -v "$PWD":/workspace \
+  -w /workspace \
+  palo-alto-upgrade:latest ./tests/run_tests.sh
+```
+
+If `docker compose` is available, you can also use:
 
 ```bash
 docker compose build
@@ -154,14 +164,21 @@ export PAN_TEST_PASSWORD='your_password'
 ./tests/run_tests.sh
 ```
 
-Run playbook in container:
+Run playbook in container (Docker-only path):
 
 ```bash
 export PANOS_USERNAME=admin
 export PANOS_PASSWORD='your_password'
-docker compose run --rm palo-alto-upgrade \
+sudo docker run --rm \
+  -v "$PWD":/workspace \
+  -w /workspace \
+  -e PANOS_USERNAME \
+  -e PANOS_PASSWORD \
+  palo-alto-upgrade:latest \
   ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml --check
 ```
+
+Note: on many OM2248/Ubuntu setups, access to `/var/run/docker.sock` requires `sudo` unless your user is in the `docker` group.
 
 ## Playbook Phases
 

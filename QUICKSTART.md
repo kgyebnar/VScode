@@ -63,11 +63,14 @@ ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml
 
 ## Step 6: Run on Opengear OM2248 (Container)
 
-Build and test inside Docker:
+Build and test inside Docker (works without Docker Compose):
 
 ```bash
-docker compose build
-docker compose run --rm palo-alto-upgrade
+sudo docker build -t palo-alto-upgrade:latest .
+sudo docker run --rm \
+  -v "$PWD":/workspace \
+  -w /workspace \
+  palo-alto-upgrade:latest ./tests/run_tests.sh
 ```
 
 Run playbook in container:
@@ -75,8 +78,20 @@ Run playbook in container:
 ```bash
 export PANOS_USERNAME=admin
 export PANOS_PASSWORD='your_password'
-docker compose run --rm palo-alto-upgrade \
+sudo docker run --rm \
+  -v "$PWD":/workspace \
+  -w /workspace \
+  -e PANOS_USERNAME \
+  -e PANOS_PASSWORD \
+  palo-alto-upgrade:latest \
   ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml --check
+```
+
+If `docker compose` plugin is available, this is also valid:
+
+```bash
+docker compose build
+docker compose run --rm palo-alto-upgrade
 ```
 
 For persistent artifacts in container mode, use:
