@@ -1,0 +1,61 @@
+Palo Alto Firewall Upgrade Report
+================================================================================
+Generated: {{ ansible_date_time.iso8601 }}
+Upgrade Target Version: {{ target_firmware_version }}
+
+UPGRADE SUMMARY
+================================================================================
+Total Firewalls: {{ play_hosts | length }}
+{%- if upgrade_status_counts is defined %}
+  Successful: {{ upgrade_status_counts.success | default(0) }}
+  Failed: {{ upgrade_status_counts.failed | default(0) }}
+  Skipped: {{ upgrade_status_counts.skipped | default(0) }}
+{% endif %}
+
+DETAILED RESULTS
+================================================================================
+{%- for host in play_hosts %}
+
+Host: {{ host }}
+{% if hostvars[host].backup_file is defined -%}
+  Status: {{ hostvars[host].upgrade_status | default('UNKNOWN') }}
+  Previous Version: {{ hostvars[host].current_fw_version.matches[0].values()[0] | default('Unknown') }}
+  New Version: {{ hostvars[host].post_upgrade_version.matches[0].values()[0] | default('Unknown') }}
+  Backup File: {{ hostvars[host].backup_file }}
+  HA Enabled: {{ hostvars[host].is_ha_enabled | default(false) }}
+  HA Primary: {{ hostvars[host].is_primary | default(false) }}
+{%- else %}
+  Status: SKIPPED (already at target version or error)
+{%- endif %}
+{%- endfor %}
+
+BACKUP INFORMATION
+================================================================================
+Backup Location: {{ backup_dir }}
+Backup Retention: Keep for 30 days minimum
+All backups saved with timestamp: YYYYMMDD_HHMMSS format
+
+ROLLBACK PROCEDURE (if needed)
+================================================================================
+1. Access firewall GUI or CLI
+2. Navigate to Device > Software > Firmware
+3. Select the previous firmware version from the list
+4. Click "Downgrade" (note: this requires the previous version to still be available)
+5. Alternative: Use configuration backup XML file to restore settings if needed
+
+NEXT STEPS
+================================================================================
+1. Verify all firewalls are at target version {{ target_firmware_version }}
+2. Monitor firewall logs for any issues post-upgrade
+3. Validate policy enforcement and traffic flow
+4. Test critical connectivity and application functionality
+5. Archive backup files to long-term storage
+
+SUPPORT CONTACT
+================================================================================
+For issues during upgrade or questions, contact your Palo Alto Networks support representative
+or check the firewall logs for detailed error messages.
+
+================================================================================
+End of Report
+================================================================================

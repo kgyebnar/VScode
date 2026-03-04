@@ -1,0 +1,102 @@
+---
+# Palo Alto Networks Firewall Inventory
+# This file defines your firewall infrastructure for automated upgrades
+
+all:
+  children:
+    palo_alto_firewalls:
+      hosts:
+        # ============================================================================
+        # EXAMPLE 1: Single Firewall (Non-HA)
+        # ============================================================================
+        fw-branch-01:
+          panos_ip: 192.168.1.1
+          panos_username: admin
+          # panos_password: defined in vault or environment variable
+          target_firmware_version: "11.1.0"
+
+        # ============================================================================
+        # EXAMPLE 2: HA Pair (Active/Passive)
+        # ============================================================================
+        fw-datacenter-primary:
+          panos_ip: 10.0.1.10
+          panos_username: admin
+          ha_enabled: true
+          is_primary: true
+          ha_peer_ip: 10.0.1.11
+          target_firmware_version: "11.1.0"
+
+        fw-datacenter-secondary:
+          panos_ip: 10.0.1.11
+          panos_username: admin
+          ha_enabled: true
+          is_primary: false
+          ha_peer_ip: 10.0.1.10
+          target_firmware_version: "11.1.0"
+
+        # ============================================================================
+        # EXAMPLE 3: Panorama-Managed Firewall
+        # ============================================================================
+        fw-managed-01:
+          panos_ip: 172.16.1.20
+          panos_username: admin
+          panorama_managed: true
+          panorama_ip: 172.16.1.100
+          target_firmware_version: "11.1.0"
+
+      vars:
+        # Common variables for all Palo Alto firewalls
+        panos_username: admin
+        # NOTE: Use Ansible Vault for passwords in production!
+        # Encrypt this inventory: ansible-vault encrypt inventory/palo_alto.yml
+        # Or use environment variables: PANOS_PASSWORD
+        target_firmware_version: "11.1.0"
+        backup_dir: "./backups"
+        log_dir: "./logs"
+
+# ============================================================================
+# SETUP INSTRUCTIONS
+# ============================================================================
+#
+# 1. Replace IP addresses and hostnames with your actual firewall details
+#
+# 2. Set API credentials (choose one method):
+#    a) Via Ansible Vault (RECOMMENDED):
+#       - Encrypt this file: ansible-vault encrypt inventory/palo_alto.yml
+#       - Set vault password in ~/.ansible/vault_pass
+#       - Credentials will be read from vault
+#
+#    b) Via environment variables:
+#       export PANOS_USERNAME=admin
+#       export PANOS_PASSWORD=your_password
+#       export PALO_ALTO_PORTAL_USERNAME=your_portal_email
+#       export PALO_ALTO_PORTAL_PASSWORD=your_portal_password
+#
+#    c) Via inventory variables (NOT RECOMMENDED for production):
+#       panos_password: your_password_here
+#
+# 3. For HA pairs, ensure both hosts are in inventory with matching ha configuration
+#
+# 4. Run the playbook:
+#    ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml
+#
+# 5. For dry-run (check mode):
+#    ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml --check
+#
+# 6. For specific hosts:
+#    ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml -l fw-datacenter-primary
+#
+# ============================================================================
+# VARIABLE REFERENCE
+# ============================================================================
+#
+# panos_ip: IP address or hostname of the firewall
+# panos_username: API username (default: admin)
+# ha_enabled: Set to true if firewall is part of HA pair
+# is_primary: Set to true if this is the primary in HA pair
+# ha_peer_ip: IP address of the HA peer
+# panorama_managed: Set to true if managed by Panorama
+# panorama_ip: IP address of Panorama
+# target_firmware_version: Version to upgrade to
+#
+# ============================================================================

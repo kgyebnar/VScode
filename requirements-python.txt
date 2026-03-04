@@ -1,0 +1,30 @@
+---
+# Python Requirements for Palo Alto Networks Firewall Upgrade
+# Install with: pip install -r requirements-python.txt
+
+# Palo Alto Networks Python SDK
+# Provides low-level API access to Palo Alto firewalls
+pan-python>=0.17.0
+
+# HTTP requests library (dependency for pan-python)
+requests>=2.25.0
+
+# For better XML handling
+lxml>=4.6.0
+
+# Optional: For better credential management
+paramiko>=2.7.0
+
+# Optional: For vault functionality
+cryptography>=3.4.0
+
+# Testing and development
+pytest>=6.0.0
+pytest-ansible>=0.3.0
+
+# Code quality
+ansible-lint>=5.0.0
+yamllint>=1.25.0
+
+# Documentation
+sphinx>=3.5.0

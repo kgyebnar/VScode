@@ -1,0 +1,58 @@
+---
+# Upgrade-specific configuration
+# This file contains variables specific to the upgrade operation
+
+# Firmware version and source
+target_firmware_version: "11.1.0"
+
+# Backup retention
+backup_retention_days: 30
+backup_format: "xml"
+
+# Upgrade execution mode
+# Options: "sequential" (one device at a time) or "parallel" (multiple devices simultaneously, respecting HA constraints)
+execution_mode: "sequential"
+
+# Pre-upgrade checks
+perform_health_checks: true
+perform_configuration_validation: true
+check_system_resources: true
+
+# HA-specific options
+ha_failover_strategy: "graceful"  # Options: "graceful" (suspend) or "immediate"
+ha_force_failover: false
+wait_for_ha_sync: true
+
+# Panorama integration (if managed)
+panorama_enabled: false
+panorama_ip: ""
+panorama_username: ""
+panorama_password: ""
+
+# Post-upgrade verification
+verify_configuration_load: true
+verify_ha_sync: true
+verify_interface_status: true
+connectivity_test_enabled: false
+
+# Logging and reporting
+log_level: "info"  # Options: "debug", "info", "warning"
+create_detailed_report: true
+email_report_on_completion: false
+email_recipients: []
+
+# Error handling
+fail_on_single_host_failure: false
+continue_on_backup_failure: false
+rollback_on_failure: false
+
+# Feature flags
+enable_dry_run: false
+skip_backup: false
+force_upgrade_if_same_version: false
+
+# Device-specific overrides can be set in the inventory:
+# Example in inventory file:
+# [palo_alto_firewalls]
+# fw-primary panos_ip=192.168.1.1 target_firmware_version=11.1.0
+# fw-secondary panos_ip=192.168.1.2 ha_enabled=true

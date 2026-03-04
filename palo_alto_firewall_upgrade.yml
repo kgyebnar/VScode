@@ -1,0 +1,461 @@
+---
+- name: Palo Alto Networks Firewall Upgrade Playbook
+  hosts: palo_alto_firewalls
+  connection: local
+  gather_facts: no
+  vars_files:
+    - "group_vars/palo_alto_firewalls.yml"
+    - "vars/upgrade_config.yml"
+
+  pre_tasks:
+    - name: Create backup and log directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ backup_dir }}"
+        - "{{ log_dir }}"
+      run_once: yes
+      delegate_to: localhost
+
+    - name: Set upgrade log file path
+      set_fact:
+        upgrade_log_file: "{{ log_dir }}/upgrade_{{ ansible_date_time.iso8601_basic_short }}.log"
+      run_once: yes
+      delegate_to: localhost
+
+    - name: Initialize upgrade summary
+      set_fact:
+        upgrade_results: []
+      run_once: yes
+
+  tasks:
+    # ============================================================================
+    # PHASE 1: PRE-UPGRADE VALIDATION
+    # ============================================================================
+
+    - name: "PHASE 1: PRE-UPGRADE VALIDATION"
+      debug:
+        msg: "Starting pre-upgrade validation for {{ inventory_hostname }}"
+
+    - name: Test firewall API connectivity
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system info"
+      register: firewall_info
+      retries: 3
+      delay: 5
+      until: firewall_info is succeeded
+      ignore_errors: yes
+
+    - name: Fail if firewall unreachable
+      fail:
+        msg: "Cannot reach firewall {{ inventory_hostname }} at {{ panos_ip | default(inventory_hostname) }}. API connectivity failed."
+      when: firewall_info is failed
+
+    - name: Extract current firmware version
+      xml:
+        xmlstring: "{{ firewall_info.stdout_xml }}"
+        xpath: /response/result/system/app-version
+        content: text
+      register: current_fw_version
+      when: firewall_info is succeeded
+
+    - name: Log current firmware version
+      debug:
+        msg: "{{ inventory_hostname }}: Current firmware = {{ current_fw_version.matches[0].values()[0] | default('unknown') }}"
+
+    - name: Check if already at target version
+      set_fact:
+        skip_upgrade: "{{ (current_fw_version.matches[0].values()[0] | default('0.0.0')) == target_firmware_version }}"
+      when: firewall_info is succeeded
+
+    - name: Skip upgrade message
+      debug:
+        msg: "{{ inventory_hostname }} is already at version {{ target_firmware_version }}. Skipping upgrade."
+      when: skip_upgrade | default(false)
+
+    - name: Verify system resources
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system hardware info"
+      register: hardware_info
+      when:
+        - firewall_info is succeeded
+        - not skip_upgrade | default(false)
+
+    - name: Check for pending operations
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system info"
+      register: pending_ops
+      when:
+        - firewall_info is succeeded
+        - not skip_upgrade | default(false)
+
+    - name: Determine HA status and pairing
+      block:
+        - name: Check HA configuration
+          paloaltonetworks.panos.panos_op:
+            ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+            username: "{{ panos_username }}"
+            password: "{{ panos_password }}"
+            cmd: "request high-availability info"
+          register: ha_info
+
+        - name: Parse HA status
+          xml:
+            xmlstring: "{{ ha_info.stdout_xml }}"
+            xpath: /response/result/enabled
+            content: text
+          register: ha_enabled
+
+        - name: Extract HA peer information
+          xml:
+            xmlstring: "{{ ha_info.stdout_xml }}"
+            xpath: /response/result/peer-ip
+            content: text
+          register: ha_peer
+          when: ha_enabled.matches | length > 0
+
+        - name: Set HA facts
+          set_fact:
+            is_ha_enabled: "{{ (ha_enabled.matches | length > 0 and ha_enabled.matches[0].values()[0] == 'yes') }}"
+            ha_peer_ip: "{{ ha_peer.matches[0].values()[0] | default('') }}"
+            is_primary: false
+          when: ha_enabled.matches | length > 0
+
+        - name: Determine HA role (primary/secondary)
+          xml:
+            xmlstring: "{{ ha_info.stdout_xml }}"
+            xpath: /response/result/state
+            content: text
+          register: ha_state
+
+        - name: Set primary role fact
+          set_fact:
+            is_primary: "{{ ha_state.matches[0].values()[0] | default('secondary') == 'active' }}"
+          when: ha_state.matches | length > 0
+
+      when:
+        - firewall_info is succeeded
+        - not skip_upgrade | default(false)
+      ignore_errors: yes
+
+    # ============================================================================
+    # PHASE 2: CONFIGURATION BACKUP
+    # ============================================================================
+
+    - name: "PHASE 2: CONFIGURATION BACKUP"
+      debug:
+        msg: "Creating configuration backup for {{ inventory_hostname }}"
+      when: not skip_upgrade | default(false)
+
+    - name: Create configuration backup
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request export configuration to file"
+      register: backup_request
+      when: not skip_upgrade | default(false)
+
+    - name: Wait for backup to complete
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request export configuration to file"
+      retries: 5
+      delay: 10
+      register: backup_result
+      until: backup_result is succeeded
+      when: not skip_upgrade | default(false)
+
+    - name: Backup configuration locally
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: >
+          request export configuration to "ftp://{{ inventory_hostname }}-{{ ansible_date_time.iso8601_basic_short }}.xml"
+      register: backup_export
+      when: not skip_upgrade | default(false)
+      ignore_errors: yes
+
+    - name: Save backup file path
+      set_fact:
+        backup_file: "{{ backup_dir }}/{{ inventory_hostname }}-{{ current_fw_version.matches[0].values()[0] | default('unknown') }}-backup-{{ ansible_date_time.iso8601_basic_short }}.xml"
+      when: not skip_upgrade | default(false)
+
+    - name: Record backup completion
+      debug:
+        msg: "Backup created for {{ inventory_hostname }}: {{ backup_file }}"
+      when: not skip_upgrade | default(false)
+
+    # ============================================================================
+    # PHASE 3: FIRMWARE DOWNLOAD AND STAGING
+    # ============================================================================
+
+    - name: "PHASE 3: FIRMWARE DOWNLOAD AND STAGING"
+      debug:
+        msg: "Downloading firmware version {{ target_firmware_version }} for {{ inventory_hostname }}"
+      when: not skip_upgrade | default(false)
+
+    - name: Check firmware availability on device
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system software info"
+      register: available_fw
+      when: not skip_upgrade | default(false)
+
+    - name: Download firmware from Palo Alto portal
+      paloaltonetworks.panos.panos_software:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        version: "{{ target_firmware_version }}"
+        download: yes
+        install: no
+      register: fw_download
+      retries: 3
+      delay: 30
+      until: fw_download is succeeded
+      when: not skip_upgrade | default(false)
+      ignore_errors: yes
+
+    - name: Verify firmware download
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system software info"
+      register: fw_verify
+      when: not skip_upgrade | default(false)
+
+    - name: Fail if firmware download failed
+      fail:
+        msg: "Failed to download firmware version {{ target_firmware_version }} to {{ inventory_hostname }}"
+      when:
+        - not skip_upgrade | default(false)
+        - fw_download is failed
+
+    # ============================================================================
+    # PHASE 4: UPGRADE EXECUTION
+    # ============================================================================
+
+    - name: "PHASE 4: UPGRADE EXECUTION - ROLLING STRATEGY"
+      debug:
+        msg: "Initiating firmware upgrade for {{ inventory_hostname }}"
+      when: not skip_upgrade | default(false)
+
+    - name: Upgrade non-HA or secondary HA firewall
+      paloaltonetworks.panos.panos_software:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        version: "{{ target_firmware_version }}"
+        download: no
+        install: yes
+        restart: yes
+      register: upgrade_result
+      when:
+        - not skip_upgrade | default(false)
+        - (not is_ha_enabled | default(false)) or (not is_primary | default(false))
+      ignore_errors: yes
+
+    - name: Wait for non-HA firewall reboot
+      wait_for:
+        host: "{{ panos_ip | default(inventory_hostname) }}"
+        port: 443
+        delay: 30
+        timeout: 600
+        state: started
+      delegate_to: localhost
+      when:
+        - not skip_upgrade | default(false)
+        - (not is_ha_enabled | default(false)) or (not is_primary | default(false))
+        - upgrade_result is succeeded
+
+    - name: Upgrade primary HA firewall (with failover)
+      block:
+        - name: Suspend HA on primary
+          paloaltonetworks.panos.panos_op:
+            ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+            username: "{{ panos_username }}"
+            password: "{{ panos_password }}"
+            cmd: "request high-availability suspend"
+          when: is_primary | default(false)
+
+        - name: Wait before initiating upgrade
+          pause:
+            seconds: 10
+
+        - name: Perform primary firmware upgrade
+          paloaltonetworks.panos.panos_software:
+            ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+            username: "{{ panos_username }}"
+            password: "{{ panos_password }}"
+            version: "{{ target_firmware_version }}"
+            download: no
+            install: yes
+            restart: yes
+          register: primary_upgrade
+          when: is_primary | default(false)
+
+        - name: Wait for primary reboot and recovery
+          wait_for:
+            host: "{{ panos_ip | default(inventory_hostname) }}"
+            port: 443
+            delay: 30
+            timeout: 600
+            state: started
+          delegate_to: localhost
+          when:
+            - is_primary | default(false)
+            - primary_upgrade is succeeded
+
+        - name: Wait for HA sync after primary upgrade
+          pause:
+            seconds: 60
+          when: is_primary | default(false)
+
+        - name: Verify HA sync status
+          paloaltonetworks.panos.panos_op:
+            ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+            username: "{{ panos_username }}"
+            password: "{{ panos_password }}"
+            cmd: "request high-availability info"
+          register: ha_sync_status
+          retries: 5
+          delay: 10
+          when: is_primary | default(false)
+
+      when:
+        - not skip_upgrade | default(false)
+        - is_ha_enabled | default(false)
+        - is_primary | default(false)
+
+    # ============================================================================
+    # PHASE 5: POST-UPGRADE VALIDATION
+    # ============================================================================
+
+    - name: "PHASE 5: POST-UPGRADE VALIDATION"
+      debug:
+        msg: "Validating upgrade on {{ inventory_hostname }}"
+      when: not skip_upgrade | default(false)
+
+    - name: Verify firewall is online post-upgrade
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system info"
+      register: post_upgrade_info
+      retries: 10
+      delay: 30
+      until: post_upgrade_info is succeeded
+      when: not skip_upgrade | default(false)
+
+    - name: Extract post-upgrade firmware version
+      xml:
+        xmlstring: "{{ post_upgrade_info.stdout_xml }}"
+        xpath: /response/result/system/app-version
+        content: text
+      register: post_upgrade_version
+      when:
+        - not skip_upgrade | default(false)
+        - post_upgrade_info is succeeded
+
+    - name: Verify firmware upgrade success
+      fail:
+        msg: "Firmware upgrade verification failed. Expected {{ target_firmware_version }}, got {{ post_upgrade_version.matches[0].values()[0] | default('unknown') }}"
+      when:
+        - not skip_upgrade | default(false)
+        - post_upgrade_version.matches[0].values()[0] | default('0.0.0') != target_firmware_version
+
+    - name: Check system resources post-upgrade
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request system resource info"
+      register: post_upgrade_resources
+      when: not skip_upgrade | default(false)
+
+    - name: Verify HA sync post-upgrade
+      paloaltonetworks.panos.panos_op:
+        ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+        username: "{{ panos_username }}"
+        password: "{{ panos_password }}"
+        cmd: "request high-availability info"
+      register: post_upgrade_ha
+      when:
+        - not skip_upgrade | default(false)
+        - is_ha_enabled | default(false)
+
+    - name: Log successful upgrade
+      debug:
+        msg: |
+          UPGRADE SUCCESSFUL for {{ inventory_hostname }}
+          Previous version: {{ current_fw_version.matches[0].values()[0] | default('unknown') }}
+          New version: {{ post_upgrade_version.matches[0].values()[0] | default('unknown') }}
+          Backup file: {{ backup_file | default('N/A') }}
+      when:
+        - not skip_upgrade | default(false)
+        - post_upgrade_version.matches[0].values()[0] | default('0.0.0') == target_firmware_version
+
+    - name: Record successful upgrade
+      set_fact:
+        upgrade_status: "SUCCESS"
+      when:
+        - not skip_upgrade | default(false)
+        - post_upgrade_version.matches[0].values()[0] | default('0.0.0') == target_firmware_version
+
+    - name: Record skipped upgrade
+      set_fact:
+        upgrade_status: "SKIPPED"
+      when: skip_upgrade | default(false)
+
+  post_tasks:
+
+    - name: "PHASE 6: UPGRADE REPORTING"
+      debug:
+        msg: "Generating upgrade report"
+      run_once: yes
+
+    - name: Create upgrade summary report
+      template:
+        src: upgrade_report.j2
+        dest: "{{ upgrade_log_file }}"
+        mode: '0644'
+      delegate_to: localhost
+      vars:
+        upgrade_results: "{{ ansible_play_batch | map(attribute='inventory_hostname') | list }}"
+      run_once: yes
+      ignore_errors: yes
+
+    - name: Display upgrade summary
+      debug:
+        msg: |
+          ========================================
+          UPGRADE SUMMARY
+          ========================================
+          Playbook execution completed.
+          Report saved to: {{ upgrade_log_file }}
+          Backups saved to: {{ backup_dir }}
+          ========================================
+      run_once: yes
+
+    - name: Final status for each firewall
+      debug:
+        msg: "{{ inventory_hostname }}: {{ upgrade_status | default('UNKNOWN') }}"

@@ -1,0 +1,57 @@
+---
+# Default variables for Palo Alto Networks firewall group
+# These can be overridden per-host in the inventory
+
+# Palo Alto API credentials
+# IMPORTANT: Use Ansible vault for sensitive credentials in production
+# Example: ansible-vault encrypt group_vars/palo_alto_firewalls.yml
+panos_username: "{{ vault_panos_username | default('admin') }}"
+panos_password: "{{ vault_panos_password | default('') }}"
+
+# Firewall IP address (defaults to inventory_hostname if not specified)
+# panos_ip: "192.168.1.1"
+
+# Target firmware version for upgrade
+target_firmware_version: "11.1.0"
+
+# Palo Alto Networks portal credentials (for firmware download)
+palo_alto_portal_username: "{{ vault_palo_alto_portal_username | default('') }}"
+palo_alto_portal_password: "{{ vault_palo_alto_portal_password | default('') }}"
+
+# Backup and logging directories
+backup_dir: "./backups"
+log_dir: "./logs"
+
+# Upgrade strategy: "rolling" (minimize downtime) or "immediate" (faster upgrade)
+upgrade_strategy: "rolling"
+
+# Delay between firewall upgrades (in seconds) for rolling strategy
+upgrade_delay_between_firewalls: 300
+
+# HA Configuration
+# Set these per-host in inventory if applicable
+ha_enabled: false
+ha_peer_ip: ""
+
+# Timeouts (in seconds)
+api_timeout: 30
+reboot_timeout: 600
+ha_sync_timeout: 120
+
+# Network connectivity test
+connectivity_test_hosts:
+  - 8.8.8.8
+  - 1.1.1.1
+
+# Rollback configuration
+enable_rollback: true
+rollback_timeout: 3600
+
+# Pre-upgrade health check requirements
+min_disk_free_percent: 10
+min_memory_free_percent: 10
+max_cpu_usage_percent: 80
+
+# Additional options
+check_mode: false  # Set to true for dry-run
+verbose_logging: true

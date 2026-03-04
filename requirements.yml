@@ -1,0 +1,39 @@
+---
+# Ansible Requirements File
+# Use with: ansible-galaxy install -r requirements.yml
+
+collections:
+  - name: paloaltonetworks.panos
+    version: ">=2.13.0"
+    # Latest stable version of Palo Alto Networks Ansible collection
+    # Provides modules for managing Palo Alto firewalls and Panorama
+
+  - name: ansible.netcommon
+    version: ">=2.0.0"
+    # Network-related utilities and plugins
+
+  - name: community.general
+    version: ">=3.0.0"
+    # General community modules for additional functionality
+
+# Python package requirements (pip)
+# Run with: pip install -r requirements-python.txt
+
+# Requirements:
+# - ansible >= 2.9
+# - python >= 3.6
+# - pan-python (Palo Alto Networks Python SDK)
+# - requests (for HTTP operations)
+
+# Installation:
+#
+# 1. Install Ansible collections:
+#    pip install ansible>=2.9
+#    ansible-galaxy install -r requirements.yml
+#
+# 2. Install Python dependencies:
+#    pip install pan-python requests
+#
+# 3. Verify installation:
+#    ansible-galaxy collection list | grep paloaltonetworks
+#    ansible-doc -l | grep panos_
