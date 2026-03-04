@@ -1,4 +1,3 @@
----
 # Python Requirements for Palo Alto Networks Firewall Upgrade
 # Install with: pip install -r requirements-python.txt
 
