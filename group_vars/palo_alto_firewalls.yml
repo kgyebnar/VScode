@@ -5,8 +5,8 @@
 # Palo Alto API credentials
 # IMPORTANT: Use Ansible vault for sensitive credentials in production
 # Example: ansible-vault encrypt group_vars/palo_alto_firewalls.yml
-panos_username: "{{ vault_panos_username | default('admin') }}"
-panos_password: "{{ vault_panos_password | default('') }}"
+panos_username: "{{ lookup('env', 'PANOS_USERNAME') | default(vault_panos_username | default('admin'), true) }}"
+panos_password: "{{ lookup('env', 'PANOS_PASSWORD') | default(vault_panos_password | default(''), true) }}"
 
 # Firewall IP address (defaults to inventory_hostname if not specified)
 # panos_ip: "192.168.1.1"
@@ -15,12 +15,12 @@ panos_password: "{{ vault_panos_password | default('') }}"
 target_firmware_version: "11.1.0"
 
 # Palo Alto Networks portal credentials (for firmware download)
-palo_alto_portal_username: "{{ vault_palo_alto_portal_username | default('') }}"
-palo_alto_portal_password: "{{ vault_palo_alto_portal_password | default('') }}"
+palo_alto_portal_username: "{{ lookup('env', 'PALO_ALTO_PORTAL_USERNAME') | default(vault_palo_alto_portal_username | default(''), true) }}"
+palo_alto_portal_password: "{{ lookup('env', 'PALO_ALTO_PORTAL_PASSWORD') | default(vault_palo_alto_portal_password | default(''), true) }}"
 
 # Backup and logging directories
-backup_dir: "./backups"
-log_dir: "./logs"
+backup_dir: "{{ lookup('env', 'BACKUP_DIR') | default('./backups', true) }}"
+log_dir: "{{ lookup('env', 'LOG_DIR') | default('./logs', true) }}"
 
 # Upgrade strategy: "rolling" (minimize downtime) or "immediate" (faster upgrade)
 upgrade_strategy: "rolling"

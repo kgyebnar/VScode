@@ -1,0 +1,24 @@
+services:
+  palo-alto-upgrade:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: palo-alto-upgrade:latest
+    container_name: palo-alto-upgrade
+    network_mode: host
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+      - ./data/backups:/data/backups
+      - ./data/logs:/data/logs
+    environment:
+      BACKUP_DIR: /data/backups
+      LOG_DIR: /data/logs
+      PANOS_USERNAME: ${PANOS_USERNAME:-}
+      PANOS_PASSWORD: ${PANOS_PASSWORD:-}
+      PALO_ALTO_PORTAL_USERNAME: ${PALO_ALTO_PORTAL_USERNAME:-}
+      PALO_ALTO_PORTAL_PASSWORD: ${PALO_ALTO_PORTAL_PASSWORD:-}
+      PAN_TEST_HOST: ${PAN_TEST_HOST:-}
+      PAN_TEST_USERNAME: ${PAN_TEST_USERNAME:-}
+      PAN_TEST_PASSWORD: ${PAN_TEST_PASSWORD:-}
+    command: ["./tests/run_tests.sh"]

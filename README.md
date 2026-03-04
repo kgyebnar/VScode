@@ -138,6 +138,13 @@ Run automated checks:
 ./tests/run_tests.sh
 ```
 
+Run the same tests in a container (Opengear OM2248):
+
+```bash
+docker compose build
+docker compose run --rm palo-alto-upgrade
+```
+
 Run live PAN firewall API smoke test (optional):
 
 ```bash
@@ -145,6 +152,15 @@ export PAN_TEST_HOST=10.0.1.10
 export PAN_TEST_USERNAME=admin
 export PAN_TEST_PASSWORD='your_password'
 ./tests/run_tests.sh
+```
+
+Run playbook in container:
+
+```bash
+export PANOS_USERNAME=admin
+export PANOS_PASSWORD='your_password'
+docker compose run --rm palo-alto-upgrade \
+  ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml --check
 ```
 
 ## Playbook Phases

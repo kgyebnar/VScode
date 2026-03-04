@@ -61,6 +61,28 @@ ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml --che
 ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml
 ```
 
+## Step 6: Run on Opengear OM2248 (Container)
+
+Build and test inside Docker:
+
+```bash
+docker compose build
+docker compose run --rm palo-alto-upgrade
+```
+
+Run playbook in container:
+
+```bash
+export PANOS_USERNAME=admin
+export PANOS_PASSWORD='your_password'
+docker compose run --rm palo-alto-upgrade \
+  ansible-playbook palo_alto_firewall_upgrade.yml -i inventory/palo_alto.yml --check
+```
+
+For persistent artifacts in container mode, use:
+- `/data/backups` for backups
+- `/data/logs` for logs
+
 ## Troubleshooting
 
 ### "No such file or directory: group_vars/palo_alto_firewalls.yml"

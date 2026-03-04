@@ -1,0 +1,7 @@
+.git
+.ansible_cache
+__pycache__
+*.pyc
+backups
+logs
+data
