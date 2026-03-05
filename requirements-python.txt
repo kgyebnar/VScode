@@ -4,6 +4,7 @@
 # Palo Alto Networks Python SDK
 # Provides low-level API access to Palo Alto firewalls
 pan-python>=0.17.0
+pan-os-python>=1.12.0
 
 # HTTP requests library (dependency for pan-python)
 requests>=2.25.0

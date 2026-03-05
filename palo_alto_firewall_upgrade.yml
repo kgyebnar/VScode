@@ -37,13 +37,53 @@
       run_once: yes
 
   tasks:
-    - name: Check mode notice
-      debug:
-        msg: "Check mode detected for {{ inventory_hostname }}. Live firewall operations are skipped."
-      when: ansible_check_mode
+    - name: Collect live system info in check mode
+      block:
+        - name: Query firewall system info in check mode
+          paloaltonetworks.panos.panos_op:
+            ip_address: "{{ panos_ip | default(inventory_hostname) }}"
+            username: "{{ panos_username }}"
+            password: "{{ panos_password }}"
+            cmd: "show system info"
+          register: checkmode_system_info
+          check_mode: no
 
-    - name: End host execution in check mode
-      meta: end_host
+        - name: Extract check mode hostname
+          xml:
+            xmlstring: "{{ checkmode_system_info.stdout_xml }}"
+            xpath: /response/result/system/hostname
+            content: text
+          register: checkmode_hostname_xml
+
+        - name: Extract check mode firmware version
+          xml:
+            xmlstring: "{{ checkmode_system_info.stdout_xml }}"
+            xpath: /response/result/system/sw-version
+            content: text
+          register: checkmode_version_xml
+
+        - name: Extract check mode uptime
+          xml:
+            xmlstring: "{{ checkmode_system_info.stdout_xml }}"
+            xpath: /response/result/system/uptime
+            content: text
+          register: checkmode_uptime_xml
+
+        - name: Set check mode display facts
+          set_fact:
+            checkmode_hostname: "{{ (checkmode_hostname_xml.matches | length > 0) | ternary(checkmode_hostname_xml.matches[0].values() | list | first, 'unknown') }}"
+            checkmode_version: "{{ (checkmode_version_xml.matches | length > 0) | ternary(checkmode_version_xml.matches[0].values() | list | first, 'unknown') }}"
+            checkmode_uptime: "{{ (checkmode_uptime_xml.matches | length > 0) | ternary(checkmode_uptime_xml.matches[0].values() | list | first, 'unknown') }}"
+
+        - name: Print check mode summary
+          debug:
+            msg: >-
+              CHECK MODE INFO - host={{ checkmode_hostname }},
+              current_version={{ checkmode_version }},
+              uptime={{ checkmode_uptime }}
+
+        - name: End host execution in check mode
+          meta: end_host
       when: ansible_check_mode
 
     # ============================================================================

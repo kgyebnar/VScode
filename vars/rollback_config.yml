@@ -1,9 +1,12 @@
 ---
 # Rollback-specific configuration
 
-# Fixed version pair
-# Only this transition is allowed:
-# current_version -> target_version
+# Allowed versions for transition cycle
+allowed_versions:
+  - "10.2.4"
+  - "11.0.2"
+
+# Default direction
 current_version: "10.2.4"
 target_version: "11.0.2"
 
