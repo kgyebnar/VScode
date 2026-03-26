@@ -10,10 +10,14 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
-      <Route path="/sessions/new" element={<NewSession />} />
-      <Route path="/sessions/:sessionId" element={<SessionDetail />} />
-      <Route path="/sessions/:sessionId/firewalls/:firewallId" element={<FirewallDetail />} />
-      <Route path="/sessions/:sessionId/audit" element={<AuditPage />} />
+      <Route path="/jobs/new" element={<NewSession />} />
+      <Route path="/jobs/:sessionId" element={<SessionDetail />} />
+      <Route path="/jobs/:sessionId/firewalls/:firewallId" element={<FirewallDetail />} />
+      <Route path="/jobs/:sessionId/audit" element={<AuditPage />} />
+      <Route path="/sessions/new" element={<Navigate to="/jobs/new" replace />} />
+      <Route path="/sessions/:sessionId" element={<Navigate to="/jobs/:sessionId" replace />} />
+      <Route path="/sessions/:sessionId/firewalls/:firewallId" element={<Navigate to="/jobs/:sessionId/firewalls/:firewallId" replace />} />
+      <Route path="/sessions/:sessionId/audit" element={<Navigate to="/jobs/:sessionId/audit" replace />} />
       <Route path="/audit" element={<AuditPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

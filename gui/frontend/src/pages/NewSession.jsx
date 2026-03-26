@@ -116,7 +116,7 @@ export const NewSession = () => {
         await apiClient.startSession(sessionId);
       }
 
-      navigate(`/sessions/${sessionId}`);
+      navigate(`/jobs/${sessionId}`);
     } catch (err) {
       setError(err?.response?.data?.detail || err.message || 'Nem sikerült létrehozni a jobot.');
     } finally {

@@ -61,7 +61,7 @@ export const Dashboard = () => {
             Refresh
           </button>
           <button
-            onClick={() => navigate('/sessions/new')}
+            onClick={() => navigate('/jobs/new')}
             className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
           >
             <Plus size={16} />
@@ -100,7 +100,7 @@ export const Dashboard = () => {
           </div>
           <div className="mt-5 flex items-center gap-3">
             <button
-              onClick={() => navigate('/sessions/new')}
+              onClick={() => navigate('/jobs/new')}
               className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
             >
               Create job
@@ -125,7 +125,7 @@ export const Dashboard = () => {
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
-              onClick={() => rollbackSession && navigate(`/sessions/${rollbackSession.session_id}`)}
+              onClick={() => rollbackSession && navigate(`/jobs/${rollbackSession.session_id}`)}
               disabled={!rollbackSession}
               className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -150,7 +150,7 @@ export const Dashboard = () => {
               activeSessions.map((session) => (
                 <Link
                   key={session.session_id}
-                  to={`/sessions/${session.session_id}`}
+                  to={`/jobs/${session.session_id}`}
                   className="block rounded-2xl border border-cyan-400/20 bg-cyan-400/5 p-4 transition hover:border-cyan-400/40 hover:bg-cyan-400/10"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -198,7 +198,7 @@ export const Dashboard = () => {
                   recentSessions.map((session) => (
                     <tr
                       key={session.session_id}
-                      onClick={() => navigate(`/sessions/${session.session_id}`)}
+                      onClick={() => navigate(`/jobs/${session.session_id}`)}
                       className="cursor-pointer transition hover:bg-white/5"
                     >
                       <td className="px-4 py-4 text-sm font-medium text-cyan-300">{session.session_id}</td>

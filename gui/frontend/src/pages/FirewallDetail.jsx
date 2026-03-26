@@ -70,7 +70,7 @@ export const FirewallDetail = () => {
 
   if (loading && !details) {
     return (
-      <Layout title="Firewall detail" subtitle="Loading firewall information..." backTo={`/sessions/${sessionId}`}>
+      <Layout title="Firewall detail" subtitle="Loading firewall information..." backTo={`/jobs/${sessionId}`}>
         <div className="flex items-center justify-center py-20 text-slate-400">
           <Loader2 className="mr-3 animate-spin" size={18} />
           Loading...
@@ -81,13 +81,13 @@ export const FirewallDetail = () => {
 
   if (!details) {
     return (
-      <Layout title="Firewall detail" subtitle="No firewall details available." backTo={`/sessions/${sessionId}`}>
+      <Layout title="Firewall detail" subtitle="No firewall details available." backTo={`/jobs/${sessionId}`}>
         <EmptyState
           title="Firewall not found"
           description="This firewall is not part of the selected job or the API could not load it."
           action={
             <button
-              onClick={() => navigate(`/sessions/${sessionId}`)}
+              onClick={() => navigate(`/jobs/${sessionId}`)}
               className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950"
             >
               Back to job
@@ -99,10 +99,10 @@ export const FirewallDetail = () => {
   }
 
   return (
-    <Layout
+      <Layout
       title={`${details.firewall_id}`}
       subtitle={`${details.firewall_ip} · ${details.session_id}`}
-      backTo={`/sessions/${sessionId}`}
+      backTo={`/jobs/${sessionId}`}
       actions={<ShellBadge>{loading ? 'refreshing' : details.status}</ShellBadge>}
     >
       {error && (

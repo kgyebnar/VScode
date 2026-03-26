@@ -169,7 +169,7 @@ export const SessionDetail = () => {
           <div className="rounded-3xl border border-white/8 bg-white/5 p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-white">Firewall progress</h2>
-              <Link to={`/sessions/${session.session_id}/audit`} className="text-sm text-cyan-300 transition hover:text-cyan-200">
+              <Link to={`/jobs/${session.session_id}/audit`} className="text-sm text-cyan-300 transition hover:text-cyan-200">
                 Open audit trail
               </Link>
             </div>
@@ -181,7 +181,7 @@ export const SessionDetail = () => {
                 firewalls.map((firewall) => (
                   <Link
                     key={firewall.firewall_id}
-                    to={`/sessions/${session.session_id}/firewalls/${firewall.firewall_id}`}
+                    to={`/jobs/${session.session_id}/firewalls/${firewall.firewall_id}`}
                     className="block rounded-2xl border border-white/8 bg-slate-950/50 p-4 transition hover:border-cyan-400/30 hover:bg-slate-950/80"
                   >
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -224,7 +224,7 @@ export const SessionDetail = () => {
           <div className="rounded-3xl border border-white/8 bg-white/5 p-6">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-white">Recent events</h2>
-              <Link to={`/sessions/${session.session_id}/audit`} className="text-sm text-cyan-300 transition hover:text-cyan-200">
+              <Link to={`/jobs/${session.session_id}/audit`} className="text-sm text-cyan-300 transition hover:text-cyan-200">
                 View all
               </Link>
             </div>

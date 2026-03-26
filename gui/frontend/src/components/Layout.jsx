@@ -4,7 +4,7 @@ import { Activity, ArrowLeft, FileClock, LayoutDashboard, Plus, Shield } from 'l
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/sessions/new', label: 'Upgrade', icon: Plus },
+  { to: '/jobs/new', label: 'Upgrade', icon: Plus },
   { to: '/audit', label: 'Audit', icon: FileClock },
 ];
 

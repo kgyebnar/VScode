@@ -80,7 +80,7 @@ export const AuditPage = () => {
     <Layout
       title={`Audit trail · ${sessionId}`}
       subtitle="Watch the operational trail for this job: lifecycle changes, warnings, errors and rollback events."
-      backTo={`/sessions/${sessionId}`}
+      backTo={`/jobs/${sessionId}`}
       actions={
         <ShellBadge>{loading ? 'refreshing' : `${auditLog.length} events`}</ShellBadge>
       }
@@ -176,7 +176,7 @@ export const AuditPage = () => {
                     <span className="text-sm font-semibold text-white">{entry.event_type}</span>
                     {entry.firewall_id && (
                       <Link
-                        to={`/sessions/${sessionId}/firewalls/${entry.firewall_id}`}
+                        to={`/jobs/${sessionId}/firewalls/${entry.firewall_id}`}
                         className="text-sm text-cyan-300 transition hover:text-cyan-200"
                       >
                         {entry.firewall_id}
