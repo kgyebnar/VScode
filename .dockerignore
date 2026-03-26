@@ -5,3 +5,6 @@ __pycache__
 backups
 logs
 data
+gui/frontend/node_modules
+gui/frontend/dist
+gui/frontend/.vite

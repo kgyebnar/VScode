@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  gui:
+    build:
+      context: ../..
+      dockerfile: gui/docker/Dockerfile
+    ports:
+      - "${GUI_PORT:-8080}:80"
+    environment:
+      - DB_PATH=/data/gui.db
+      - PLAYBOOK_DIR=/app
+      - BACKUP_DIR=/data/backups
+      - LOG_DIR=/data/logs
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8000
+      - ANSIBLE_CONFIG=/app/ansible.cfg
+      - DEBUG=${DEBUG:-false}
+    volumes:
+      - gui_data:/data
+    networks:
+      - palo-alto-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  gui_data:
+    driver: local
+
+networks:
+  palo-alto-network:
+    driver: bridge
+
+# Usage:
+# docker compose up -d
+# Access UI at: http://localhost:8080
+# API at: http://localhost:8080/api
+# Swagger docs: http://localhost:8080/docs
