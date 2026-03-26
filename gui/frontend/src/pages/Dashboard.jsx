@@ -88,10 +88,10 @@ export const Dashboard = () => {
         <section className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200">
-                <Upload size={15} />
-                Upgrade
-              </div>
+                <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200">
+                  <Upload size={15} />
+                  Job
+                </div>
               <h2 className="mt-3 text-2xl font-semibold text-white">Upload inventory and start a job</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
                 Upload a YAML inventory file, create the job, then start or resume the playbook from the job page.
@@ -113,9 +113,9 @@ export const Dashboard = () => {
         <section className="rounded-3xl border border-rose-400/20 bg-rose-400/5 p-6">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-rose-200">
-                <RotateCcw size={15} />
-                Rollback
+                <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-rose-200">
+                  <RotateCcw size={15} />
+                  Rollback
               </div>
               <h2 className="mt-3 text-2xl font-semibold text-white">Open a job, then rollback from firewall detail</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">

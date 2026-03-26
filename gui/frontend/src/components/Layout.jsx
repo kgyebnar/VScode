@@ -4,7 +4,7 @@ import { Activity, ArrowLeft, FileClock, LayoutDashboard, Plus, Shield } from 'l
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/jobs/new', label: 'Upgrade', icon: Plus },
+  { to: '/jobs/new', label: 'Jobs', icon: Plus },
   { to: '/audit', label: 'Audit', icon: FileClock },
 ];
 
@@ -20,7 +20,7 @@ export const Layout = ({ title, subtitle, actions, children, backTo, backLabel =
               <Shield size={22} />
             </div>
             <div>
-              <div className="text-lg font-semibold tracking-tight">Upgrade Console</div>
+              <div className="text-lg font-semibold tracking-tight">Job Console</div>
               <div className="text-xs uppercase tracking-[0.32em] text-slate-400">Palo Alto workflow</div>
             </div>
           </div>

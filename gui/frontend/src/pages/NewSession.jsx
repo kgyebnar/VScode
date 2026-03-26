@@ -126,7 +126,7 @@ export const NewSession = () => {
 
   return (
     <Layout
-      title="New upgrade job"
+      title="New job"
       subtitle="Upload or choose an inventory file, then create a job for the upgrade flow."
       backTo="/"
       actions={<ShellBadge>{loading ? 'loading options' : 'ready'}</ShellBadge>}
