@@ -5,8 +5,10 @@ FastAPI application with WebSocket support for real-time updates
 
 import os
 import logging
+from pathlib import Path
+from datetime import datetime
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -14,6 +16,7 @@ from fastapi.responses import FileResponse
 from database import init_db, get_db, engine
 from models import Base
 from api import sessions, firewalls, audit, websocket
+from utils.yaml_parser import InventoryParser
 
 # Configure logging
 logging.basicConfig(
@@ -81,11 +84,43 @@ async def get_config():
 @app.get("/api/inventory-files")
 async def get_inventory_files():
     """Get list of available inventory files"""
-    from utils.yaml_parser import InventoryParser
-    files = InventoryParser.get_available_inventory_files()
+    playbook_dir = os.getenv("PLAYBOOK_DIR", "/workspace")
+    files = InventoryParser.get_available_inventory_files(playbook_dir=playbook_dir)
     return {
         "inventory_files": files,
         "total": len(files)
+    }
+
+
+@app.post("/api/inventory-files/upload")
+async def upload_inventory_file(file: UploadFile = File(...)):
+    """Upload a new inventory file for GUI use"""
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Inventory file name is required")
+
+    suffix = Path(file.filename).suffix.lower()
+    if suffix not in {".yml", ".yaml"}:
+        raise HTTPException(status_code=400, detail="Inventory file must be .yml or .yaml")
+
+    upload_dir = Path(os.getenv("INVENTORY_UPLOAD_DIR", "/data/inventory-uploads"))
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
+    safe_name = Path(file.filename).name
+    destination = upload_dir / f"{Path(safe_name).stem}_{timestamp}{suffix}"
+
+    content = await file.read()
+    destination.write_bytes(content)
+
+    playbook_dir = os.getenv("PLAYBOOK_DIR", "/workspace")
+    files = InventoryParser.get_available_inventory_files(playbook_dir=playbook_dir)
+
+    return {
+        "status": "uploaded",
+        "inventory_file": str(destination),
+        "original_filename": safe_name,
+        "total": len(files),
+        "inventory_files": files,
     }
 
 

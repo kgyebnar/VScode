@@ -77,12 +77,25 @@ class InventoryParser:
         """
         inventory_files = []
         try:
-            inventory_dir = Path(playbook_dir) / "inventory"
-            if inventory_dir.exists():
-                inventory_files = [
-                    str(f) for f in inventory_dir.glob("*.yml")
-                    if f.is_file()
-                ]
+            search_dirs = [
+                Path(playbook_dir) / "inventory",
+                Path("/data/inventory-uploads"),
+            ]
+
+            seen = set()
+            for inventory_dir in search_dirs:
+                if not inventory_dir.exists():
+                    continue
+
+                for pattern in ("*.yml", "*.yaml"):
+                    for f in inventory_dir.glob(pattern):
+                        if f.is_file():
+                            path = str(f)
+                            if path not in seen:
+                                seen.add(path)
+                                inventory_files.append(path)
+
+            inventory_files.sort()
         except Exception as e:
             logger.error(f"Error finding inventory files: {e}")
 

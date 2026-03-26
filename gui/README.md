@@ -54,6 +54,8 @@ Access:
 - Backend API: `http://<om2248-ip>:8080/api`
 - Swagger docs: `http://<om2248-ip>:8080/docs`
 
+On the `Upgrade` page you can upload a new inventory file and use it immediately in the session form.
+
 If you want a one-command VM/OM2248 deployment flow, use:
 
 ```bash

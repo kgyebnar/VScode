@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Loader2, Plus, RefreshCw } from 'lucide-react';
+import { ArrowRight, Loader2, Plus, RefreshCw, RotateCcw, Upload } from 'lucide-react';
 import apiClient from '../services/api';
 import { Layout, ShellBadge } from '../components/Layout';
 import { EmptyState } from '../components/EmptyState';
@@ -43,6 +43,7 @@ export const Dashboard = () => {
 
   const recentSessions = sessions.slice(0, 8);
   const activeSessions = sessions.filter((s) => s.status === 'running' || s.status === 'paused');
+  const rollbackSession = activeSessions[0] || recentSessions[0] || null;
 
   return (
     <Layout
@@ -81,6 +82,59 @@ export const Dashboard = () => {
         <StatCard label="Paused" value={stats.paused} hint="Waiting for resume" accent="amber" />
         <StatCard label="Completed" value={stats.completed} hint="Finished successfully" accent="emerald" />
         <StatCard label="Failed" value={stats.failed} hint="Need attention" accent="rose" />
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <section className="rounded-3xl border border-cyan-400/20 bg-cyan-400/5 p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200">
+                <Upload size={15} />
+                Upgrade
+              </div>
+              <h2 className="mt-3 text-2xl font-semibold text-white">Upload inventory and start an upgrade</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
+                Upload a YAML inventory file, create the session, then start or resume the playbook from the session page.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex items-center gap-3">
+            <button
+              onClick={() => navigate('/sessions/new')}
+              className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+            >
+              Create upgrade
+              <ArrowRight size={16} />
+            </button>
+            <ShellBadge>inventory upload enabled</ShellBadge>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-rose-400/20 bg-rose-400/5 p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-rose-200">
+                <RotateCcw size={15} />
+                Rollback
+              </div>
+              <h2 className="mt-3 text-2xl font-semibold text-white">Open a session, then rollback from firewall detail</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
+                Rollback stays explicit: open a session, click a firewall, then trigger rollback from the firewall detail page.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => rollbackSession && navigate(`/sessions/${rollbackSession.session_id}`)}
+              disabled={!rollbackSession}
+              className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {rollbackSession ? `Open ${rollbackSession.session_id}` : 'No session available'}
+              <ArrowRight size={16} />
+            </button>
+            <ShellBadge>{rollbackSession ? 'rollback ready' : 'create a session first'}</ShellBadge>
+          </div>
+        </section>
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">

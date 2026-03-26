@@ -40,6 +40,9 @@ curl http://localhost:8000/health
 # List sessions
 curl http://localhost:8000/api/sessions
 
+# Upload inventory
+curl -F "file=@inventory/palo_alto.yml" http://localhost:8000/api/inventory-files/upload
+
 # Swagger docs
 open http://localhost:8000/docs
 ```

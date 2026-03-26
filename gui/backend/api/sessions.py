@@ -31,6 +31,7 @@ class SessionResponse(BaseModel):
     created_at: datetime
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
+    inventory_file: str
     target_firmware_version: str
     total_firewalls: int
     execution_mode: str
@@ -62,6 +63,7 @@ async def list_sessions(db: Session = Depends(get_db)) -> dict:
                     "created_at": s.created_at.isoformat(),
                     "started_at": s.started_at.isoformat() if s.started_at else None,
                     "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+                    "inventory_file": s.inventory_file,
                     "target_firmware_version": s.target_firmware_version,
                     "total_firewalls": s.total_firewalls,
                 }
@@ -124,6 +126,7 @@ async def create_session(req: SessionCreate, db: Session = Depends(get_db)) -> d
             "session_id": session.session_id,
             "status": session.status,
             "total_firewalls": session.total_firewalls,
+            "inventory_file": session.inventory_file,
             "firewalls": inventory_data["firewalls"]
         }
 
@@ -151,6 +154,7 @@ async def get_session(session_id: str, db: Session = Depends(get_db)) -> dict:
             "created_at": session.created_at.isoformat(),
             "started_at": session.started_at.isoformat() if session.started_at else None,
             "completed_at": session.completed_at.isoformat() if session.completed_at else None,
+            "inventory_file": session.inventory_file,
             "target_firmware_version": session.target_firmware_version,
             "execution_mode": session.execution_mode,
             "total_firewalls": session.total_firewalls,

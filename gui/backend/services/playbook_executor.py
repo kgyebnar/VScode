@@ -66,7 +66,7 @@ class PlaybookExecutor:
             cmd.append(playbook_path)
 
             # Add inventory
-            inventory_path = os.path.join(self.playbook_dir, inventory_file)
+            inventory_path = inventory_file if os.path.isabs(inventory_file) else os.path.join(self.playbook_dir, inventory_file)
             if not os.path.exists(inventory_path):
                 logger.error(f"Inventory not found: {inventory_path}")
                 return {

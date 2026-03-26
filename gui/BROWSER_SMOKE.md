@@ -10,7 +10,7 @@ Use this checklist after deploying the GUI on the VM or OM2248 container.
 
 - The React dashboard shell should load.
 - The page title should be `Palo Alto Upgrade GUI`.
-- The top navigation should show `Dashboard`, `New Session`, `Session Detail`, and `Audit`.
+- The top navigation should show `Dashboard`, `Upgrade`, `Audit`, and the session pages reached from the dashboard.
 
 ## Quick verification steps
 
@@ -19,9 +19,10 @@ Use this checklist after deploying the GUI on the VM or OM2248 container.
 3. Confirm the API health endpoint works in the same browser session:
    - `http://192.168.113.128:8080/health`
 4. Open DevTools and confirm there are no red console errors.
-5. Click `New Session` and verify the form loads.
-6. Click `Audit` and verify the filter panel loads.
-7. Open an existing session and verify:
+5. Click `Upgrade` and verify the upload form loads.
+6. Upload a `.yml` or `.yaml` inventory file and confirm it appears in the inventory dropdown.
+7. Click `Audit` and verify the filter panel loads.
+8. Open an existing session and verify:
    - start/resume controls render
    - firewall list renders
    - rollback action is visible on firewall detail

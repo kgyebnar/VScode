@@ -20,6 +20,10 @@ const api = axios.create({
   }
 });
 
+const formApi = axios.create({
+  baseURL: API_BASE_URL,
+});
+
 export const apiClient = {
   // Sessions
   listSessions: () => api.get('/sessions'),
@@ -48,6 +52,11 @@ export const apiClient = {
 
   // Configuration
   getInventoryFiles: () => api.get('/inventory-files'),
+  uploadInventoryFile: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return formApi.post('/inventory-files/upload', formData);
+  },
   getFirmwareVersions: () => api.get('/firmware-versions'),
   getConfig: () => api.get('/config'),
 };
