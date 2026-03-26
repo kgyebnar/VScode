@@ -52,7 +52,7 @@ export const Layout = ({ title, subtitle, actions, children, backTo, backLabel =
               Live monitoring
             </div>
             <p className="leading-6 text-slate-400">
-              Sessions, audit events and rollback actions stay visible in one place.
+              Jobs, audit events and rollback actions stay visible in one place.
             </p>
           </div>
         </aside>

@@ -84,13 +84,13 @@ export const FirewallDetail = () => {
       <Layout title="Firewall detail" subtitle="No firewall details available." backTo={`/sessions/${sessionId}`}>
         <EmptyState
           title="Firewall not found"
-          description="This firewall is not part of the selected session or the API could not load it."
+          description="This firewall is not part of the selected job or the API could not load it."
           action={
             <button
               onClick={() => navigate(`/sessions/${sessionId}`)}
               className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950"
             >
-              Back to session
+              Back to job
             </button>
           }
         />

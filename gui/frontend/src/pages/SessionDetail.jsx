@@ -35,7 +35,7 @@ export const SessionDetail = () => {
       setAuditLog(auditRes.data.events || []);
       setError('');
     } catch (err) {
-      setError(err?.response?.data?.detail || err.message || 'Nem sikerült betölteni a sessiont.');
+      setError(err?.response?.data?.detail || err.message || 'Nem sikerült betölteni a jobot.');
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export const SessionDetail = () => {
 
   if (loading && !session) {
     return (
-      <Layout title="Session detail" subtitle="Loading session..." backTo="/">
+      <Layout title="Job detail" subtitle="Loading job..." backTo="/">
         <div className="flex items-center justify-center py-20 text-slate-400">
           <Loader2 className="mr-3 animate-spin" size={18} />
           Loading...
@@ -94,10 +94,10 @@ export const SessionDetail = () => {
 
   if (!session) {
     return (
-      <Layout title="Session detail" subtitle="No session available." backTo="/">
+      <Layout title="Job detail" subtitle="No job available." backTo="/">
         <EmptyState
-          title="Session not found"
-          description="The session may not exist yet, or the backend could not read it."
+          title="Job not found"
+          description="The job may not exist yet, or the backend could not read it."
           action={
             <button
               onClick={() => navigate('/')}
@@ -121,7 +121,7 @@ export const SessionDetail = () => {
 
   return (
     <Layout
-      title={`Session ${session.session_id}`}
+      title={`Job ${session.session_id}`}
       subtitle={`${session.inventory_file} · target ${session.target_firmware_version} · ${session.execution_mode}`}
       backTo="/"
       actions={
@@ -155,7 +155,7 @@ export const SessionDetail = () => {
           <div className="rounded-3xl border border-white/8 bg-white/5 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-2">
-                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">Session controls</div>
+                <div className="text-sm uppercase tracking-[0.18em] text-slate-500">Job controls</div>
                 <Controls {...actionProps} />
               </div>
               <div className="text-right text-sm text-slate-400">
@@ -176,7 +176,7 @@ export const SessionDetail = () => {
 
             <div className="mt-5 space-y-4">
               {firewalls.length === 0 ? (
-                <EmptyState title="No firewalls in session" description="The selected inventory did not produce any hosts." />
+                <EmptyState title="No firewalls in job" description="The selected inventory did not produce any hosts." />
               ) : (
                 firewalls.map((firewall) => (
                   <Link
@@ -230,7 +230,7 @@ export const SessionDetail = () => {
             </div>
             <div className="mt-4 space-y-3">
               {auditLog.length === 0 ? (
-                <EmptyState title="No audit events yet" description="Start the session to create operational events." />
+                <EmptyState title="No audit events yet" description="Start the job to create operational events." />
               ) : (
                 auditLog.slice(0, 6).map((event) => (
                   <div key={event.id} className="rounded-2xl border border-white/8 bg-slate-950/50 p-4">

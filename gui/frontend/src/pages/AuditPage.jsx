@@ -11,7 +11,7 @@ import { formatDateTime } from '../utils/format';
 export const AuditPage = () => {
   const { sessionId: routeSessionId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const sessionId = routeSessionId || searchParams.get('session') || '';
+  const sessionId = routeSessionId || searchParams.get('job') || searchParams.get('session') || '';
   const [auditLog, setAuditLog] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,7 @@ export const AuditPage = () => {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (sessionId) params.set('session', sessionId);
+    if (sessionId) params.set('job', sessionId);
     if (filters.severity) params.set('severity', filters.severity);
     if (filters.event_type) params.set('event_type', filters.event_type);
     setSearchParams(params, { replace: true });
@@ -65,12 +65,12 @@ export const AuditPage = () => {
     return (
       <Layout
         title="Audit trail"
-        subtitle="Pick a session to inspect its event history."
-        actions={<ShellBadge>no session selected</ShellBadge>}
+        subtitle="Pick a job to inspect its event history."
+        actions={<ShellBadge>no job selected</ShellBadge>}
       >
         <EmptyState
-          title="No session selected"
-          description="Open a session detail page and jump to its audit trail, or append ?session=<id> to the URL."
+          title="No job selected"
+          description="Open a job detail page and jump to its audit trail, or append ?job=<id> to the URL."
         />
       </Layout>
     );
@@ -79,7 +79,7 @@ export const AuditPage = () => {
   return (
     <Layout
       title={`Audit trail · ${sessionId}`}
-      subtitle="Watch the operational trail for this session: lifecycle changes, warnings, errors and rollback events."
+      subtitle="Watch the operational trail for this job: lifecycle changes, warnings, errors and rollback events."
       backTo={`/sessions/${sessionId}`}
       actions={
         <ShellBadge>{loading ? 'refreshing' : `${auditLog.length} events`}</ShellBadge>
@@ -92,7 +92,7 @@ export const AuditPage = () => {
       )}
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <StatCard label="Total events" value={summary?.total_events ?? auditLog.length ?? 0} hint="Events stored for this session" />
+        <StatCard label="Total events" value={summary?.total_events ?? auditLog.length ?? 0} hint="Events stored for this job" />
         <StatCard label="Warnings" value={summary?.by_severity?.warning ?? 0} hint="Non-blocking operational signals" accent="amber" />
         <StatCard label="Errors" value={summary?.by_severity?.error ?? 0} hint="Failed tasks or rollback failures" accent="rose" />
       </div>
@@ -164,7 +164,7 @@ export const AuditPage = () => {
           </div>
         ) : auditLog.length === 0 ? (
           <div className="p-5">
-            <EmptyState title="No audit events found" description="Try a different filter or start the session to generate events." />
+            <EmptyState title="No audit events found" description="Try a different filter or start the job to generate events." />
           </div>
         ) : (
           <div className="divide-y divide-white/8">

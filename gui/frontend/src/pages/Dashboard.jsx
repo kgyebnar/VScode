@@ -27,7 +27,7 @@ export const Dashboard = () => {
       setSessions(response.data.sessions || []);
       setError('');
     } catch (err) {
-      setError(err?.response?.data?.detail || err.message || 'Failed to load sessions');
+      setError(err?.response?.data?.detail || err.message || 'Failed to load jobs');
     } finally {
       setLoading(false);
     }
@@ -47,11 +47,11 @@ export const Dashboard = () => {
 
   return (
     <Layout
-      title="Upgrade dashboard"
-      subtitle="Track active sessions, see the latest audit context, and jump into start/resume/rollback flows."
+      title="Job dashboard"
+      subtitle="Track active jobs, see the latest audit context, and jump into start, resume, and rollback flows."
       actions={
         <>
-          <ShellBadge>{loading ? 'syncing' : `${sessions.length} sessions`}</ShellBadge>
+          <ShellBadge>{loading ? 'syncing' : `${sessions.length} jobs`}</ShellBadge>
           <button
             onClick={loadSessions}
             disabled={loading}
@@ -65,7 +65,7 @@ export const Dashboard = () => {
             className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
           >
             <Plus size={16} />
-            New session
+            New job
           </button>
         </>
       }
@@ -77,7 +77,7 @@ export const Dashboard = () => {
       )}
 
       <div className="grid gap-4 xl:grid-cols-5">
-        <StatCard label="Total" value={stats.total} hint="All known sessions" />
+        <StatCard label="Total" value={stats.total} hint="All known jobs" />
         <StatCard label="Running" value={stats.running} hint="Currently executing" accent="cyan" />
         <StatCard label="Paused" value={stats.paused} hint="Waiting for resume" accent="amber" />
         <StatCard label="Completed" value={stats.completed} hint="Finished successfully" accent="emerald" />
@@ -92,9 +92,9 @@ export const Dashboard = () => {
                 <Upload size={15} />
                 Upgrade
               </div>
-              <h2 className="mt-3 text-2xl font-semibold text-white">Upload inventory and start an upgrade</h2>
+              <h2 className="mt-3 text-2xl font-semibold text-white">Upload inventory and start a job</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                Upload a YAML inventory file, create the session, then start or resume the playbook from the session page.
+                Upload a YAML inventory file, create the job, then start or resume the playbook from the job page.
               </p>
             </div>
           </div>
@@ -103,7 +103,7 @@ export const Dashboard = () => {
               onClick={() => navigate('/sessions/new')}
               className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
             >
-              Create upgrade
+              Create job
               <ArrowRight size={16} />
             </button>
             <ShellBadge>inventory upload enabled</ShellBadge>
@@ -117,9 +117,9 @@ export const Dashboard = () => {
                 <RotateCcw size={15} />
                 Rollback
               </div>
-              <h2 className="mt-3 text-2xl font-semibold text-white">Open a session, then rollback from firewall detail</h2>
+              <h2 className="mt-3 text-2xl font-semibold text-white">Open a job, then rollback from firewall detail</h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-                Rollback stays explicit: open a session, click a firewall, then trigger rollback from the firewall detail page.
+                Rollback stays explicit: open a job, click a firewall, then trigger rollback from the firewall detail page.
               </p>
             </div>
           </div>
@@ -129,10 +129,10 @@ export const Dashboard = () => {
               disabled={!rollbackSession}
               className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {rollbackSession ? `Open ${rollbackSession.session_id}` : 'No session available'}
+              {rollbackSession ? `Open ${rollbackSession.session_id}` : 'No job available'}
               <ArrowRight size={16} />
             </button>
-            <ShellBadge>{rollbackSession ? 'rollback ready' : 'create a session first'}</ShellBadge>
+            <ShellBadge>{rollbackSession ? 'rollback ready' : 'create a job first'}</ShellBadge>
           </div>
         </section>
       </div>
@@ -140,12 +140,12 @@ export const Dashboard = () => {
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-3xl border border-white/8 bg-white/5 p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Active sessions</h2>
+            <h2 className="text-lg font-semibold text-white">Active jobs</h2>
             <span className="text-sm text-slate-400">{activeSessions.length} live</span>
           </div>
           <div className="mt-4 space-y-3">
             {activeSessions.length === 0 ? (
-              <EmptyState title="No active sessions" description="Create a session to start an upgrade cycle." />
+              <EmptyState title="No active jobs" description="Create a job to start an upgrade cycle." />
             ) : (
               activeSessions.map((session) => (
                 <Link
@@ -173,7 +173,7 @@ export const Dashboard = () => {
 
         <section className="rounded-3xl border border-white/8 bg-white/5 p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-white">Recent sessions</h2>
+            <h2 className="text-lg font-semibold text-white">Recent jobs</h2>
             {loading && <Loader2 className="animate-spin text-slate-400" size={16} />}
           </div>
 
@@ -181,7 +181,7 @@ export const Dashboard = () => {
             <table className="w-full">
               <thead className="bg-slate-950/50 text-left text-xs uppercase tracking-[0.18em] text-slate-500">
                 <tr>
-                  <th className="px-4 py-3">Session</th>
+                  <th className="px-4 py-3">Job</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Target</th>
                   <th className="px-4 py-3">Created</th>
@@ -191,7 +191,7 @@ export const Dashboard = () => {
                 {recentSessions.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-4 py-8">
-                      <EmptyState title="No sessions yet" description="Create the first upgrade session from the inventory files." />
+                      <EmptyState title="No jobs yet" description="Create the first upgrade job from the inventory files." />
                     </td>
                   </tr>
                 ) : (

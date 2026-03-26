@@ -118,7 +118,7 @@ export const NewSession = () => {
 
       navigate(`/sessions/${sessionId}`);
     } catch (err) {
-      setError(err?.response?.data?.detail || err.message || 'Nem sikerült létrehozni a sessiont.');
+      setError(err?.response?.data?.detail || err.message || 'Nem sikerült létrehozni a jobot.');
     } finally {
       setSubmitting(false);
     }
@@ -126,8 +126,8 @@ export const NewSession = () => {
 
   return (
     <Layout
-      title="New upgrade session"
-      subtitle="Upload or choose an inventory file, then create a session for the upgrade flow."
+      title="New upgrade job"
+      subtitle="Upload or choose an inventory file, then create a job for the upgrade flow."
       backTo="/"
       actions={<ShellBadge>{loading ? 'loading options' : 'ready'}</ShellBadge>}
     >
@@ -258,7 +258,7 @@ export const NewSession = () => {
               className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />}
-              {submitting ? 'Creating...' : 'Create session'}
+              {submitting ? 'Creating...' : 'Create job'}
             </button>
             <button
               type="button"
@@ -275,8 +275,8 @@ export const NewSession = () => {
             <h2 className="text-lg font-semibold text-white">How this MVP works</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-400">
               <li>1. Upload a YAML inventory or choose an existing one.</li>
-              <li>2. The session tracks progress and audit events.</li>
-              <li>3. Start and resume stay on the session page.</li>
+              <li>2. The job tracks progress and audit events.</li>
+              <li>3. Start and resume stay on the job page.</li>
               <li>4. Rollback is handled from an individual firewall detail view.</li>
             </ul>
           </div>

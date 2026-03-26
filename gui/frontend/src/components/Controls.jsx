@@ -34,7 +34,7 @@ export const Controls = ({
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Play size={18} />
-          Start upgrade
+          Start job
         </button>
       )}
 
@@ -45,13 +45,13 @@ export const Controls = ({
           className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RotateCcw size={18} />
-          Resume upgrade
+          Resume job
         </button>
       )}
 
       {!isPending && !isPaused && (
         <span className="text-sm text-slate-400">
-          {isCompleted ? 'Session finished' : isFailed ? 'Session failed' : 'Session is running'}
+          {isCompleted ? 'Job finished' : isFailed ? 'Job failed' : 'Job is running'}
         </span>
       )}
 
